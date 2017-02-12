@@ -43,12 +43,14 @@ GameManager.prototype.setup = function () {
     this.over        = previousState.over;
     this.won         = previousState.won;
     this.keepPlaying = previousState.keepPlaying;
+    this.recordGrids = previousState.recordGrids;
   } else {
     this.grid        = new Grid(this.size);
     this.score       = 0;
     this.over        = false;
     this.won         = false;
     this.keepPlaying = false;
+    this.recordGrids = new Array();
 
     // Add the initial tiles
     this.addStartTiles();
@@ -105,7 +107,8 @@ GameManager.prototype.serialize = function () {
     score:       this.score,
     over:        this.over,
     won:         this.won,
-    keepPlaying: this.keepPlaying
+    keepPlaying: this.keepPlaying,
+    recordGrids: this.recordGrids
   };
 };
 
@@ -188,6 +191,7 @@ GameManager.prototype.move = function (direction) {
 
     this.actuate();
   }
+  this.recordGrid()
 };
 
 // Get the vector representing the chosen direction
@@ -269,4 +273,26 @@ GameManager.prototype.tileMatchesAvailable = function () {
 
 GameManager.prototype.positionsEqual = function (first, second) {
   return first.x === second.x && first.y === second.y;
+};
+
+GameManager.prototype.recordGrid = function () {
+  var data = new Array();
+  for(i=0;i<=3;i++){
+    data[i]=new Array();
+  }
+  for(i=0;i<=3;i++){
+    var cells=this.grid.cells[i];
+    for(j=0;j<=3;j++){
+      if(cells[j]){
+        data[j][i]=cells[j].value
+      }else{
+        data[j][i]=0;
+      }
+    }
+  }
+  this.recordGrids.push(data)
+  if(this.recordGrids.length>5){
+    this.recordGrids.shift()
+  }
+  //console.log(this.recordGrids)
 };
