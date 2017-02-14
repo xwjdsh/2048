@@ -187,6 +187,8 @@ GameManager.prototype.move = function (direction) {
 
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
+      // Send grid 
+      this.sendRecordGrids()
     }
 
     this.actuate();
@@ -294,5 +296,24 @@ GameManager.prototype.recordGrid = function () {
   if(this.recordGrids.length>5){
     this.recordGrids.shift()
   }
-  //console.log(this.recordGrids)
-};
+  //console.log(JSON.stringify(this.recordGrids))
+}
+
+GameManager.prototype.sendRecordGrids = function () {
+  var http = new XMLHttpRequest();
+  var url = "http://127.0.0.1:8001";
+  http.open("POST", url, true);
+
+  //Send the proper header information along with the request
+  http.setRequestHeader("Content-Type", "application/json");
+
+  http.onreadystatechange = function() {//Call a function when the state changes.
+      if(http.readyState == 4 && http.status == 200) {
+          console.log("Record success!")
+      }
+  }
+  var o=new Object();
+  o.grid=this.recordGrids;
+  o.score=this.score;
+  http.send(JSON.stringify(o));
+}
