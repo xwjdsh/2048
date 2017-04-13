@@ -506,11 +506,12 @@ hr {
   -webkit-animation-fill-mode: backwards;
   -moz-animation-fill-mode: backwards;
   animation-fill-mode: backwards; }
-
-.above-game:after {
+.above-game {
+  text-align: center;
+}
+/*.above-game:after {
   content: "";
-  display: block;
-  clear: both; }
+  clear: both;}*/
 
 .game-intro {
   float: left;
