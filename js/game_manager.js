@@ -9,6 +9,8 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
+  this.inputManager.on("hint", this.hint.bind(this));
+
 
   this.setup();
 }
@@ -18,6 +20,14 @@ GameManager.prototype.restart = function () {
   this.storageManager.clearGameState();
   this.actuator.continueGame(); // Clear the game won/lost message
   this.setup();
+};
+
+GameManager.prototype.hint = function () {
+  this.sendPostRequest("http://127.0.0.1:9001",{grid:this.grid.toArray()},this.hintResult);
+};
+
+GameManager.prototype.hintResult = function(respText) {
+  console.log(respText);
 };
 
 // Keep playing after winning (allows going over 2048)
@@ -188,7 +198,7 @@ GameManager.prototype.move = function (direction) {
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
       // Send grid 
-      this.sendRecordGrids()
+      this.sendPostRequest("http://127.0.0.1:8001",{grid:this.recordGrids,sore:this.score})
     }
 
     this.actuate();
@@ -278,42 +288,23 @@ GameManager.prototype.positionsEqual = function (first, second) {
 };
 
 GameManager.prototype.recordGrid = function () {
-  var data = new Array();
-  for(i=0;i<=3;i++){
-    data[i]=new Array();
-  }
-  for(i=0;i<=3;i++){
-    var cells=this.grid.cells[i];
-    for(j=0;j<=3;j++){
-      if(cells[j]){
-        data[j][i]=cells[j].value
-      }else{
-        data[j][i]=0;
-      }
-    }
-  }
-  this.recordGrids.push(data)
+  this.recordGrids.push(this.grid.toArray())
   if(this.recordGrids.length>5){
     this.recordGrids.shift()
   }
   //console.log(JSON.stringify(this.recordGrids))
 }
 
-GameManager.prototype.sendRecordGrids = function () {
-  var http = new XMLHttpRequest();
-  var url = "http://127.0.0.1:8001";
-  http.open("POST", url, true);
+GameManager.prototype.sendPostRequest = function (url,data,callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", url, true);
 
-  //Send the proper header information along with the request
-  http.setRequestHeader("Content-Type", "application/json");
+  xhr.setRequestHeader("Content-Type", "application/json");
 
-  http.onreadystatechange = function() {//Call a function when the state changes.
-      if(http.readyState == 4 && http.status == 200) {
-          console.log("Record success!")
+  xhr.onreadystatechange = function() {//Call a function when the state changes.
+      if(xhr.readyState == 4 && xhr.status == 200) {
+          callback(xhr.responseText);
       }
   }
-  var o=new Object();
-  o.grid=this.recordGrids;
-  o.score=this.score;
-  http.send(JSON.stringify(o));
+  xhr.send(JSON.stringify(data));
 }
