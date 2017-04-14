@@ -73,6 +73,7 @@ KeyboardInputManager.prototype.listen = function () {
   this.bindButtonPress(".restart-button", this.restart);
   this.bindButtonPress(".keep-playing-button", this.keepPlaying);
   this.bindButtonPress(".hint-button", this.hint);
+  this.bindButtonPress(".recordGrid-checkbox", this.recordGame);
 
   // Respond to swipe events
   var touchStartClientX, touchStartClientY;
@@ -135,6 +136,10 @@ KeyboardInputManager.prototype.restart = function (event) {
 
 KeyboardInputManager.prototype.hint = function (event) {
   this.emit("hint");
+};
+
+KeyboardInputManager.prototype.recordGame = function (event) {
+  this.emit("recordGame");
 };
 
 KeyboardInputManager.prototype.keepPlaying = function (event) {

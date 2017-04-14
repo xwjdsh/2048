@@ -10,7 +10,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
   this.inputManager.on("hint", this.hint.bind(this));
-
+  this.inputManager.on("recordGame", this.recordGame.bind(this));
 
   this.setup();
 }
@@ -25,6 +25,11 @@ GameManager.prototype.restart = function () {
 GameManager.prototype.hint = function () {
   this.sendPostRequest("http://127.0.0.1:9001",{grid:this.grid.toArray()},this.hintResult);
 };
+
+GameManager.prototype.recordGame = function () {
+  this.isRecordGrids = document.querySelector(".recordGrid-checkbox").checked;
+};
+
 
 GameManager.prototype.hintResult = function(respText) {
   console.log(respText);
@@ -54,6 +59,7 @@ GameManager.prototype.setup = function () {
     this.won         = previousState.won;
     this.keepPlaying = previousState.keepPlaying;
     this.recordGrids = previousState.recordGrids;
+    this.isRecordGrids = true;
   } else {
     this.grid        = new Grid(this.size);
     this.score       = 0;
@@ -61,6 +67,7 @@ GameManager.prototype.setup = function () {
     this.won         = false;
     this.keepPlaying = false;
     this.recordGrids = new Array();
+    this.isRecordGrids = true;
 
     // Add the initial tiles
     this.addStartTiles();
@@ -118,7 +125,7 @@ GameManager.prototype.serialize = function () {
     over:        this.over,
     won:         this.won,
     keepPlaying: this.keepPlaying,
-    recordGrids: this.recordGrids
+    recordGrids: this.recordGrids,
   };
 };
 
@@ -198,7 +205,9 @@ GameManager.prototype.move = function (direction) {
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
       // Send grid 
-      this.sendPostRequest("http://127.0.0.1:8001",{grid:this.recordGrids,sore:this.score})
+      if(this.isRecordGrids){
+        this.sendPostRequest("http://127.0.0.1:8001",{grid:this.recordGrids,sore:this.score})
+      }
     }
 
     this.actuate();
