@@ -23,7 +23,7 @@ GameManager.prototype.restart = function () {
 };
 
 GameManager.prototype.hint = function () {
-  this.sendPostRequest("http://127.0.0.1:9001",{grid:this.grid.toArray()},this.hintResult);
+  this.sendPostRequest("http://127.0.0.1:9001/compute",{grid:this.grid.toArray()},this.hintResult);
 };
 
 GameManager.prototype.recordGame = function () {
@@ -206,7 +206,7 @@ GameManager.prototype.move = function (direction) {
       this.over = true; // Game over!
       // Send grid 
       if(this.isRecordGrids){
-        this.sendPostRequest("http://127.0.0.1:8001",{grid:this.recordGrids,sore:this.score})
+        this.sendPostRequest("http://127.0.0.1:9001/record",{grid:this.recordGrids,sore:this.score})
       }
     }
 
