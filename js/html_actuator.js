@@ -137,3 +137,7 @@ HTMLActuator.prototype.clearMessage = function () {
   this.messageContainer.classList.remove("game-won");
   this.messageContainer.classList.remove("game-over");
 };
+
+HTMLActuator.prototype.showHint = function(hint) {
+  document.getElementsByClassName("hint-button")[0].innerHTML = ['↑','→','↓','←'][hint];
+}

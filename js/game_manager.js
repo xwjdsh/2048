@@ -31,8 +31,13 @@ GameManager.prototype.recordGame = function () {
 };
 
 
-GameManager.prototype.hintResult = function(respText) {
-  console.log(respText);
+GameManager.prototype.hintResult = function(resp) {
+  var r=JSON.parse(resp.responseText);
+  if(r&&r.code==0){
+    this.actuator.showHint(r.data)
+  }
+  //console.log(r.data);
+  //console.log(r.code);
 };
 
 // Keep playing after winning (allows going over 2048)
@@ -305,6 +310,7 @@ GameManager.prototype.recordGrid = function () {
 }
 
 GameManager.prototype.sendPostRequest = function (url,data,callback) {
+  var self=this;
   var xhr = new XMLHttpRequest();
   xhr.open("POST", url, true);
 
@@ -312,7 +318,8 @@ GameManager.prototype.sendPostRequest = function (url,data,callback) {
 
   xhr.onreadystatechange = function() {//Call a function when the state changes.
       if(xhr.readyState == 4 && xhr.status == 200) {
-          callback(xhr.responseText);
+        self.func=callback;
+        self.func(xhr);
       }
   }
   xhr.send(JSON.stringify(data));
