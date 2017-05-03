@@ -211,7 +211,7 @@ GameManager.prototype.move = function (direction) {
       this.over = true; // Game over!
       // Send grid 
       if(this.isRecordGrids){
-        this.sendPostRequest("http://127.0.0.1:9001/record",{grid:this.recordGrids,sore:this.score})
+        this.sendPostRequest("http://127.0.0.1:9001/record",{grid:this.recordGrids,score:this.score})
       }
     }
 
