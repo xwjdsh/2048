@@ -23,7 +23,7 @@ GameManager.prototype.restart = function () {
 };
 
 GameManager.prototype.hint = function () {
-  this.sendPostRequest("http://127.0.0.1:9001/compute",{grid:this.grid.toArray()},this.hintResult);
+  this.sendPostRequest("http://127.0.0.1:9001/compute",{data:this.grid.toArray()},this.hintResult);
 };
 
 GameManager.prototype.recordGame = function () {
