@@ -343,6 +343,7 @@ GameManager.prototype.run = function(resp) {
 
   var r=JSON.parse(resp.responseText);
   if(r&&r.code==0){
+    this.actuator.showHint(r.data)
     this.move(r.data);
     var self = this;
     var timeout = animationDelay;
