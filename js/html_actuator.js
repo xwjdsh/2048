@@ -139,9 +139,9 @@ HTMLActuator.prototype.clearMessage = function () {
 };
 
 HTMLActuator.prototype.showHint = function(hint) {
-  document.getElementsByClassName("hint-button")[0].innerHTML = ['↑','→','↓','←'][hint];
+  document.getElementById("hint-button").innerHTML = ['↑','→','↓','←'][hint];
 }
 
 HTMLActuator.prototype.setRunButton = function(message) {
-  document.getElementById('run-button').innerHTML = message;
+  document.getElementById('ai-button').innerHTML = message;
 }
