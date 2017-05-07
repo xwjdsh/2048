@@ -344,6 +344,7 @@ GameManager.prototype.run = function(resp) {
     this.move(r.data);
     var self = this;
     var timeout = animationDelay;
+
     if (this.running && !this.over && !this.won) {
       setTimeout(function(){
         self.sendPostRequest("http://127.0.0.1:9001/compute",{data:self.grid.toArray()},self.run);
