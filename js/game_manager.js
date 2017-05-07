@@ -5,11 +5,13 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.actuator       = new Actuator;
 
   this.startTiles     = 2;
+  this.running      = false;
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
   this.inputManager.on("hint", this.hint.bind(this));
+  this.inputManager.on("autoRun", this.autoRun.bind(this));
   this.inputManager.on("recordGame", this.recordGame.bind(this));
 
   this.setup();
@@ -26,6 +28,17 @@ GameManager.prototype.hint = function () {
   this.sendPostRequest("http://127.0.0.1:9001/compute",{data:this.grid.toArray()},this.hintResult);
 };
 
+GameManager.prototype.autoRun = function () {
+  if(this.running){
+    this.running=false;
+    this.actuator.setRunButton('AutoRun');
+  }else{
+    this.running=true;
+    this.sendPostRequest("http://127.0.0.1:9001/compute",{data:this.grid.toArray()},this.run);
+    this.actuator.setRunButton('Stop');
+  }
+};
+
 GameManager.prototype.recordGame = function () {
   this.isRecordGrids = document.querySelector(".recordGrid-checkbox").checked;
 };
@@ -36,8 +49,6 @@ GameManager.prototype.hintResult = function(resp) {
   if(r&&r.code==0){
     this.actuator.showHint(r.data)
   }
-  //console.log(r.data);
-  //console.log(r.code);
 };
 
 // Keep playing after winning (allows going over 2048)
@@ -323,4 +334,20 @@ GameManager.prototype.sendPostRequest = function (url,data,callback) {
       }
   }
   xhr.send(JSON.stringify(data));
+}
+
+// moves continuously until game is over
+GameManager.prototype.run = function(resp) {
+
+  var r=JSON.parse(resp.responseText);
+  if(r&&r.code==0){
+    this.move(r.data);
+    var self = this;
+    var timeout = animationDelay;
+    if (this.running && !this.over && !this.won) {
+      setTimeout(function(){
+        self.sendPostRequest("http://127.0.0.1:9001/compute",{data:self.grid.toArray()},self.run);
+      }, timeout);
+    }
+  }
 }

@@ -141,3 +141,7 @@ HTMLActuator.prototype.clearMessage = function () {
 HTMLActuator.prototype.showHint = function(hint) {
   document.getElementsByClassName("hint-button")[0].innerHTML = ['↑','→','↓','←'][hint];
 }
+
+HTMLActuator.prototype.setRunButton = function(message) {
+  document.getElementById('run-button').innerHTML = message;
+}
