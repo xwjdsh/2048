@@ -5,7 +5,12 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.actuator       = new Actuator;
 
   this.startTiles     = 2;
-  this.running      = false;
+  this.running        = false;
+  this.recordEnabled  = false;
+  this.isRecordGrids  = false;
+  this.isEnableStorage = false;
+  this.isAutoRestart = false;
+  this.step           = 0;
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
@@ -13,6 +18,8 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager.on("hint", this.hint.bind(this));
   this.inputManager.on("autoRun", this.autoRun.bind(this));
   this.inputManager.on("recordGame", this.recordGame.bind(this));
+  this.inputManager.on("enableStorage", this.enableStorage.bind(this));
+  this.inputManager.on("autoRestart", this.autoRestart.bind(this));
 
   this.setup();
 }
@@ -25,22 +32,42 @@ GameManager.prototype.restart = function () {
 };
 
 GameManager.prototype.hint = function () {
-  this.sendPostRequest("http://127.0.0.1:9001/compute",{data:this.grid.toArray()},this.hintResult);
+  this.sendPostRequest(computeUrl,{data:this.grid.toArray(),step:this.step},this.hintResult);
 };
 
 GameManager.prototype.autoRun = function () {
   if(this.running){
     this.running=false;
-    this.actuator.setRunButton('AutoRun');
   }else{
     this.running=true;
-    this.sendPostRequest("http://127.0.0.1:9001/compute",{data:this.grid.toArray()},this.run);
+    this.sendPostRequest(computeUrl,{data:this.grid.toArray(),step:this.step},this.run);
+  }
+  this.updateButton()
+};
+
+GameManager.prototype.updateButton = function () {
+  if(!this.running){
+    this.actuator.setRunButton('AutoRun');
+    this.actuator.setHint('Hint');
+  }else{
     this.actuator.setRunButton('Stop');
   }
 };
 
+
 GameManager.prototype.recordGame = function () {
-  this.isRecordGrids = document.querySelector(".recordGrid-checkbox").checked;
+  this.isRecordGrids = this.actuator.isRecordGrid()
+  this.actuate();
+};
+
+GameManager.prototype.enableStorage = function () {
+  this.isEnableStorage = this.actuator.isEnableStorage();
+  this.actuate();
+};
+
+GameManager.prototype.autoRestart = function () {
+  this.isAutoRestart = this.actuator.isAutoRestart();
+  this.actuate();
 };
 
 
@@ -63,7 +90,7 @@ GameManager.prototype.isGameTerminated = function () {
 };
 
 // Set up the game
-GameManager.prototype.setup = function () {
+GameManager.prototype.setup = function (autoRestart) {
   var previousState = this.storageManager.getGameState();
 
   // Reload the game from a previous game if present
@@ -75,19 +102,36 @@ GameManager.prototype.setup = function () {
     this.won         = previousState.won;
     this.keepPlaying = previousState.keepPlaying;
     this.recordGrids = previousState.recordGrids;
-    this.isRecordGrids = true;
+    this.isRecordGrids = previousState.isRecordGrids;
+    this.isEnableStorage = previousState.isEnableStorage;
+    this.isAutoRestart = previousState.isAutoRestart;
+    this.step = previousState.step;
+    if(!this.isEnableStorage||autoRestart){
+      this.grid        = new Grid(this.size);
+      this.score       = 0;
+      this.over        = false;
+      this.won         = false;
+      this.keepPlaying = false;
+      this.recordGrids = new Array();
+      this.step = 0;
+      this.addStartTiles();
+    }
   } else {
     this.grid        = new Grid(this.size);
     this.score       = 0;
     this.over        = false;
     this.won         = false;
+    this.step        = 0;
     this.keepPlaying = false;
+    this.running = false;
     this.recordGrids = new Array();
     this.isRecordGrids = true;
-
+    this.isEnableStorage = true;
+    this.isAutoRestart = false;
     // Add the initial tiles
     this.addStartTiles();
   }
+  this.updateButton()
 
   // Update the actuator
   this.actuate();
@@ -128,7 +172,10 @@ GameManager.prototype.actuate = function () {
     over:       this.over,
     won:        this.won,
     bestScore:  this.storageManager.getBestScore(),
-    terminated: this.isGameTerminated()
+    terminated: this.isGameTerminated(),
+    isRecordGrids:this.isRecordGrids,
+    isEnableStorage:this.isEnableStorage,
+    isAutoRestart:this.isAutoRestart,
   });
 
 };
@@ -142,6 +189,10 @@ GameManager.prototype.serialize = function () {
     won:         this.won,
     keepPlaying: this.keepPlaying,
     recordGrids: this.recordGrids,
+    isRecordGrids:this.isRecordGrids,
+    isEnableStorage:this.isEnableStorage,
+    isAutoRestart:this.isAutoRestart,
+    step: this.step,
   };
 };
 
@@ -218,13 +269,19 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
+    this.step++;
     this.addRandomTile();
 
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
       // Send grid 
       if(this.isRecordGrids){
-        this.sendPostRequest("http://127.0.0.1:9001/record",{grid:this.recordGrids,score:this.score})
+        this.sendPostRequest(recordUrl,{grid:this.recordGrids,score:this.score})
+      }
+      if(this.isAutoRestart){
+        this.setup(true);
+        this.running=true;
+        this.updateButton()
       }
     }
 
@@ -343,14 +400,24 @@ GameManager.prototype.run = function(resp) {
 
   var r=JSON.parse(resp.responseText);
   if(r&&r.code==0){
+    if(!this.running){
+      return
+    }
+    if(this.over){
+      this.running=false;
+      this.updateButton()
+      return
+    }
+
     this.actuator.showHint(r.data)
     this.move(r.data);
+
     var self = this;
     var timeout = animationDelay;
 
     if (this.running && !this.over && !this.won) {
       setTimeout(function(){
-        self.sendPostRequest("http://127.0.0.1:9001/compute",{data:self.grid.toArray()},self.run);
+        self.sendPostRequest(computeUrl,{data:self.grid.toArray(),step:self.step},self.run);
       }, timeout);
 
     }

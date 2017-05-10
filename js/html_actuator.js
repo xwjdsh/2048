@@ -31,7 +31,9 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
         self.message(true); // You win!
       }
     }
-
+    self.setRecordGame(metadata.isRecordGrids);
+    self.setEnableCache(metadata.isEnableStorage);
+    self.setAutoRestart(metadata.isAutoRestart);
   });
 };
 
@@ -142,6 +144,34 @@ HTMLActuator.prototype.showHint = function(hint) {
   document.getElementById("hint-button").innerHTML = ['↑','→','↓','←'][hint];
 }
 
+HTMLActuator.prototype.setHint = function(message) {
+  document.getElementById('hint-button').innerHTML = message;
+}
+
 HTMLActuator.prototype.setRunButton = function(message) {
   document.getElementById('ai-button').innerHTML = message;
+}
+
+HTMLActuator.prototype.isRecordGrid = function() {
+  return document.getElementById("recordGrid-checkbox").checked;
+}
+
+HTMLActuator.prototype.setRecordGame = function(checked) {
+  document.getElementById("recordGrid-checkbox").checked=checked;
+}
+
+HTMLActuator.prototype.isEnableStorage = function() {
+  return document.getElementById("cache-checkbox").checked;
+}
+
+HTMLActuator.prototype.setEnableCache = function(checked) {
+  document.getElementById("cache-checkbox").checked=checked;
+}
+
+HTMLActuator.prototype.isAutoRestart = function() {
+  return document.getElementById("auto-restart-checkbox").checked;
+}
+
+HTMLActuator.prototype.setAutoRestart = function(checked) {
+  document.getElementById("auto-restart-checkbox").checked=checked;
 }

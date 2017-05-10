@@ -75,6 +75,8 @@ KeyboardInputManager.prototype.listen = function () {
   this.bindButtonPress(".hint-button", this.hint);
   this.bindButtonPress(".ai-button", this.autoRun);
   this.bindButtonPress(".recordGrid-checkbox", this.recordGame);
+  this.bindButtonPress(".cache-checkbox", this.enableStorage);
+  this.bindButtonPress(".auto-restart-checkbox", this.autoRestart);
 
   // Respond to swipe events
   var touchStartClientX, touchStartClientY;
@@ -145,6 +147,14 @@ KeyboardInputManager.prototype.autoRun = function (event) {
 
 KeyboardInputManager.prototype.recordGame = function (event) {
   this.emit("recordGame");
+};
+
+KeyboardInputManager.prototype.enableStorage = function (event) {
+  this.emit("enableStorage");
+};
+
+KeyboardInputManager.prototype.autoRestart = function (event) {
+  this.emit("autoRestart");
 };
 
 KeyboardInputManager.prototype.keepPlaying = function (event) {
